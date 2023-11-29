@@ -44,6 +44,8 @@ void writefinal(const int rows, const double *results){
 
     fclose(csv);
 
+    free(results); // Redundant, but good practice... Not like it'll help...
+
     printf("DONE!!!\n");
 }
 
@@ -56,7 +58,7 @@ double PID(){
     double PIDoutput;
     double integral_sum;
     double previous_error = 0;
-    uint64_t i;
+    uint64_t i = 0;
 
     double idealratio = 0.1;
     double ratio = 0.5;
