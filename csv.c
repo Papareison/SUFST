@@ -11,6 +11,9 @@
 
 
 volatile sig_atomic_t flag = 0; // Set flag to 0 so loop works
+void writefinal(const int rows, double *results);
+double PID();
+void handle_sigint(int sig);
 
 int main (int argc, char *argv[]) {
 
@@ -19,10 +22,16 @@ int main (int argc, char *argv[]) {
     signal(SIGINT, handle_sigint); // Checks for CTRL+C from the terminal and turns flag variable to 1 when it is pressed
 
     double *results = malloc(1 * sizeof(double)); // Holds each iteration of the PID output
+    results[0] = 0.5;
 
     while(!flag){ // Infinite loop until CTRL+C is pressed in the terminal
-        results[i] = PID(); // Writing the value to the nth element
-        results = realloc(results, i * sizeof(*results)); // Allocating more memory to the array, per iteration
+        double *temp = realloc(results, (i + 2) * sizeof(*results)); // Allocating more memory to the array, per iteration
+        if(temp == NULL) {
+        printf("Memory Allocation Failed! Fuck You!");
+        exit(1);
+        }
+        results = temp;
+        results[i + 1] = PID(results[i]); // Writing the value to the nth element
         i++;
     }
 
@@ -31,7 +40,7 @@ int main (int argc, char *argv[]) {
     return 0;
 }
 
-void writefinal(const int rows, const double *results){
+void writefinal(const int rows, double *results){
 
     int i;
 
@@ -53,7 +62,7 @@ void handle_sigint(int sig) { // Turns flag to 1 depending on the int provided
     flag = 1;
 }
 
-double PID(){
+double PID(double ratio){
 
     double PIDoutput;
     double integral_sum;
@@ -61,15 +70,13 @@ double PID(){
     uint64_t i = 0;
 
     double idealratio = 0.1;
-    double ratio = 0.5;
     
-    double PC = 0.12;  // Proportional coefficient    // These need to be ORDERS of magnitude smaller than the ideal ratio and definitely not larger
-    double IC = 0.005;  // Integral coefficient       // ***TODO***: Tune the coefficients to ensure optimal behavior
-    double DC = 0.0001; // Derivative coefficient
+    double PC = 0.012;  // Proportional coefficient    // These need to be ORDERS of magnitude smaller than the ideal ratio and definitely not larger
+    double IC = 0.008;  // Integral coefficient       // ***TODO***: Tune the coefficients to ensure optimal behavior
+    double DC = 0.0001; // Derivative coefficient, VERY sensitive
     
     double dt = 0.001; // Time step
 
-    for(;;) {
         // Calculate the error
         double error = idealratio - ratio;
 
@@ -87,14 +94,8 @@ double PID(){
 
         // Calculate the control output
         PIDoutput = P + I + D;
-
-        ratio = PIDoutput;
-
-        if(i % 50 == 0){ // Reduce terminal clutter, doesn't affect end result
-            printf("PID = %lf\n", PIDoutput);
-        }
+        printf("PID = %lf\n", PIDoutput);
         i++;
-    }
 
 return PIDoutput;
 
