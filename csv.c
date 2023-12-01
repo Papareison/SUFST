@@ -11,18 +11,18 @@
 
 
 volatile sig_atomic_t flag = 0; // Set flag to 0 so loop works
-void writefinal(const int rows, double *results);
-double PID();
+void writefinalresults(const int rows, double *results);
+double PID(double ratio);
 void handle_sigint(int sig);
 
 int main (int argc, char *argv[]) {
 
-    uint64_t i = 0; // 64 bits is a safety measure to make sure overflow doesn't occur, the PID() goes through a tremendous amount of iterations
+    uint32_t i = 0; // 32 bits is a safety measure to make sure overflow doesn't occur, the PID() goes through a tremendous amount of iterations
 
     signal(SIGINT, handle_sigint); // Checks for CTRL+C from the terminal and turns flag variable to 1 when it is pressed
 
     double *results = malloc(1 * sizeof(double)); // Holds each iteration of the PID output
-    results[0] = 0.5;
+    results[0] = 0.2;
 
     while(!flag){ // Infinite loop until CTRL+C is pressed in the terminal
         double *temp = realloc(results, (i + 2) * sizeof(*results)); // Allocating more memory to the array, per iteration
@@ -35,12 +35,12 @@ int main (int argc, char *argv[]) {
         i++;
     }
 
-    writefinal(i, results); // Final write to csv file
+    writefinalresults(i, results); // Final write to csv file
 
     return 0;
 }
 
-void writefinal(const int rows, double *results){
+void writefinalresults(const int rows, double *results){
 
     int i;
 
@@ -67,13 +67,12 @@ double PID(double ratio){
     double PIDoutput;
     double integral_sum;
     double previous_error = 0;
-    uint64_t i = 0;
 
     double idealratio = 0.1;
     
-    double PC = 0.012;  // Proportional coefficient    // These need to be ORDERS of magnitude smaller than the ideal ratio and definitely not larger
-    double IC = 0.008;  // Integral coefficient       // ***TODO***: Tune the coefficients to ensure optimal behavior
-    double DC = 0.0001; // Derivative coefficient, VERY sensitive
+    double PC = 0.65;    // Proportional coefficient    // These need to be ORDERS of magnitude smaller than the ideal ratio and definitely not larger
+    double IC = 200;     // Integral coefficient        // ***TODO***: Tune the coefficients to ensure optimal behavior
+    double DC = 0.00013; // Derivative coefficient, VERY sensitive
     
     double dt = 0.001; // Time step
 
@@ -94,8 +93,12 @@ double PID(double ratio){
 
         // Calculate the control output
         PIDoutput = P + I + D;
+
+        if(PIDoutput < 0){ // Slip ratio shouldn't take negative values
+            PIDoutput = 0;
+        }
+
         printf("PID = %lf\n", PIDoutput);
-        i++;
 
 return PIDoutput;
 
