@@ -11,13 +11,13 @@ int main(){
     double idealratio = 0.1;
     double ratio = 0.5;
     
-    double PC = 0.012;  // Proportional coefficient    // These need to be ORDERS of magnitude smaller than the ideal ratio and definitely not larger
-    double IC = 0.008;  // Integral coefficient       // ***TODO***: Tune the coefficients to ensure optimal behavior
-    double DC = 0.0001; // Derivative coefficient, VERY sensitive
+    double PC = 0.02;  // Proportional coefficient    // These need to be ORDERS of magnitude smaller than the ideal ratio and definitely not larger
+    double IC = 0.05;  // Integral coefficient       // ***TODO***: Tune the coefficients to ensure optimal behavior
+    double DC = 0.001; // Derivative coefficient
     
     double dt = 0.001; // Time step
 
-    for(;;) {  // THIS WILL NEED TO BE REMOVED IF A PID FUNCTION IS MADE USING THIS CODE AS THE LOOP WILL HAVE TO RUN OUTSIDE OF IT FOR IT TO RECEIVE ARGUMENTS
+    for(;;) {
         // Calculate the error
         double error = idealratio - ratio;
 
