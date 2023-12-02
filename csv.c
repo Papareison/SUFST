@@ -65,7 +65,7 @@ void handle_sigint(int sig) { // Turns flag to 1 depending on the int provided
 double PID(double ratio){
 
     double PIDoutput;
-    double integral_sum;
+    double integral_sum = 0;
     double previous_error = 0;
 
     double idealratio = 0.1;
