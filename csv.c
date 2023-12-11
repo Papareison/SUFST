@@ -1,14 +1,7 @@
-// THIS IS STUPID AND WRONG. IGNORE!!!
-
-
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
-
-#define MAGIC_COEFFICIENT 2.25
 
 //      RUN THIS FROM THE TERMINAL, IDEs WILL LAG LIKE HELL                                                        
 //      USE FOR TESTING IDEAL COEFFICIENT VALUES AND TO GRAPH THE RESULTS FROM THE RESULTING CSV USING EXCEL       
@@ -17,6 +10,18 @@
 
 
 volatile sig_atomic_t flag = 0; // Set flag to 0 so loop works
+
+double idealratio = 0.1;
+
+double dt = 0.001; // Time step
+
+double PC = 0.75;    // Proportional coefficient    // These need to be ORDERS of magnitude smaller than the ideal ratio and definitely not larger
+double IC = 1;     // Integral coefficient
+double DC = 0.0001; // Derivative coefficient, VERY sensitive
+
+double integral_sum = 0;
+
+double previous_error = 0;
 
 void writefinalresults(const int rows, double *results);
 
@@ -58,8 +63,6 @@ void writefinalresults(const int rows, double *results){
 
     fclose(csv);
 
-    free(results); // Redundant, but good practice... Not like it'll help...
-
     printf("DONE!!!\n");
 }
 
@@ -70,43 +73,27 @@ void handle_sigint(int sig){ // Turns flag to 1 depending on the int provided
 double PID(double ratio){
 
     double PIDoutput;
-    double integral_sum = 0;
-    double previous_error = 0;
 
-    double idealratio = 0.1;
+    // Calculate the error
+    double error = idealratio - ratio;
 
-    double usedratio = MAGIC_COEFFICIENT * idealratio; 
-    
-    double PC = 0.65;    // Proportional coefficient    // These need to be ORDERS of magnitude smaller than the ideal ratio and definitely not larger
-    double IC = 20;     // Integral coefficient        
-    double DC = 0.00013; // Derivative coefficient, VERY sensitive
-    
-    double dt = 0.001; // Time step
+    // Calculate P, I, and D terms
+    double P = PC * error; // P
 
-        // Calculate the error
-        double error = usedratio - ratio;
+    integral_sum += error * dt; // I
+    double I = IC * integral_sum;
 
-        // Calculate P, I, and D terms
-        double P = PC * error; // P
+    double delta_error = (error - previous_error) / dt; // D
+    double D = DC * delta_error;
 
-        integral_sum += error * dt; // I
-        double I = IC * integral_sum;
+    // Update the previous error
+    previous_error = error;
 
-        double delta_error = (error - previous_error) / dt; // D
-        double D = DC * delta_error;
+    // Calculate the control output
+    PIDoutput = P + I + D;
 
-        // Update the previous error
-        previous_error = error;
+    printf("PID = %lf\n", PIDoutput);
 
-        // Calculate the control output
-        PIDoutput = P + I + D;
-
-        if(PIDoutput < 0){ // Slip ratio shouldn't take negative values
-            PIDoutput = 0;
-        }
-
-        printf("PID = %lf\n", PIDoutput);
-
-return PIDoutput;
+    return PIDoutput;
 
 }
