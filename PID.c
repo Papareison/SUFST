@@ -1,32 +1,35 @@
-#define MAGIC_COEFFICIENT 2.25
+#include <stdio.h>
 
-double PID(double ratio){
+
+int main(){
 
     double PIDoutput;
     double integral_sum = 0;
     double previous_error = 0;
-
     double idealratio = 0.1;
-
-    double usedratio = MAGIC_COEFFICIENT * idealratio; 
+    double ratio = 0.2;
     
-    double PC = 0.65;    // Proportional coefficient    // These need to be ORDERS of magnitude smaller than the ideal ratio and definitely not larger
-    double IC = 20;     // Integral coefficient        
-    double DC = 0.00013; // Derivative coefficient, VERY sensitive
-    
+    double PC = 0.75;  // Proportional coefficient    // These need to be ORDERS of magnitude smaller than the ideal ratio and definitely not larger
+    double IC = 1;  // Integral coefficient       // ***TODO***: Tune the coefficients to ensure optimal behavior
+    double DC = 0.0001; // Derivative coefficient
     double dt = 0.001; // Time step
 
+    double P, I, D;
+
+    double error, delta_error;
+
+    for(;;) {
         // Calculate the error
-        double error = usedratio - ratio;
+        error = idealratio - ratio;
 
         // Calculate P, I, and D terms
-        double P = PC * error; // P
+        P = PC * error; // P
 
         integral_sum += error * dt; // I
-        double I = IC * integral_sum;
+        I = IC * integral_sum;
 
-        double delta_error = (error - previous_error) / dt; // D
-        double D = DC * delta_error;
+        delta_error = (error - previous_error) / dt; // D
+        D = DC * delta_error;
 
         // Update the previous error
         previous_error = error;
@@ -34,13 +37,12 @@ double PID(double ratio){
         // Calculate the control output
         PIDoutput = P + I + D;
 
-        if(PIDoutput < 0){ // Slip ratio shouldn't take negative values
-            PIDoutput = 0;
-        }
+        ratio = PIDoutput;
 
-        // printf("PID = %lf\n", PIDoutput);
+        printf("PID = %lf\n", PIDoutput);
+    }
 
-return PIDoutput;
+return 0;
 
 }
 
