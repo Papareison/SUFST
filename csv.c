@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
-#include <stdint.h>
+
+#define MAGIC_COEFFICIENT 2.25
 
 //      RUN THIS FROM THE TERMINAL, IDEs WILL LAG LIKE HELL                                                        
 //      USE FOR TESTING IDEAL COEFFICIENT VALUES AND TO GRAPH THE RESULTS FROM THE RESULTING CSV USING EXCEL       
@@ -11,26 +12,25 @@
 
 
 volatile sig_atomic_t flag = 0; // Set flag to 0 so loop works
+
 void writefinalresults(const int rows, double *results);
+
 double PID(double ratio);
+
 void handle_sigint(int sig);
 
-int main (int argc, char *argv[]) {
 
-    uint32_t i = 0; // 32 bits is a safety measure to make sure overflow doesn't occur, the PID() goes through a tremendous amount of iterations
+int main (int argc, char *argv[]){
+
+    unsigned int i = 0; // 32 bits is a safety measure to make sure overflow doesn't occur, the PID() goes through a tremendous amount of iterations
 
     signal(SIGINT, handle_sigint); // Checks for CTRL+C from the terminal and turns flag variable to 1 when it is pressed
 
-    double *results = malloc(1 * sizeof(double)); // Holds each iteration of the PID output
+    double *results = malloc(sizeof(double)); // Holds each iteration of the PID output
     results[0] = 0.2;
 
     while(!flag){ // Infinite loop until CTRL+C is pressed in the terminal
-        double *temp = realloc(results, (i + 2) * sizeof(*results)); // Allocating more memory to the array, per iteration
-        if(temp == NULL) {
-        printf("Memory Allocation Failed! Fuck You!");
-        exit(1);
-        }
-        results = temp;
+        double *results = realloc(results, (i + 2) * sizeof(*results)); // Allocating more memory to the array, per iteration
         results[i + 1] = PID(results[i]); // Writing the value to the nth element
         i++;
     }
@@ -42,7 +42,7 @@ int main (int argc, char *argv[]) {
 
 void writefinalresults(const int rows, double *results){
 
-    int i;
+    unsigned int i;
 
     FILE *csv;
     csv = fopen("PID.csv", "w+");
@@ -58,7 +58,7 @@ void writefinalresults(const int rows, double *results){
     printf("DONE!!!\n");
 }
 
-void handle_sigint(int sig) { // Turns flag to 1 depending on the int provided
+void handle_sigint(int sig){ // Turns flag to 1 depending on the int provided
     flag = 1;
 }
 
@@ -69,15 +69,17 @@ double PID(double ratio){
     double previous_error = 0;
 
     double idealratio = 0.1;
+
+    double usedratio = MAGIC_COEFFICIENT * idealratio; 
     
     double PC = 0.65;    // Proportional coefficient    // These need to be ORDERS of magnitude smaller than the ideal ratio and definitely not larger
-    double IC = 200;     // Integral coefficient        // ***TODO***: Tune the coefficients to ensure optimal behavior
+    double IC = 20;     // Integral coefficient        
     double DC = 0.00013; // Derivative coefficient, VERY sensitive
     
     double dt = 0.001; // Time step
 
         // Calculate the error
-        double error = idealratio - ratio;
+        double error = usedratio - ratio;
 
         // Calculate P, I, and D terms
         double P = PC * error; // P
