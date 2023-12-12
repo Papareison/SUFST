@@ -32,7 +32,7 @@ void handle_sigint(int sig);
 
 int main (int argc, char *argv[]){
 
-    unsigned int i = 0; // 32 bits is a safety measure to make sure overflow doesn't occur, the PID() goes through a tremendous amount of iterations
+    unsigned long int i = 0; // 32 bits is a safety measure to make sure overflow doesn't occur, the PID() goes through a tremendous amount of iterations
 
     signal(SIGINT, handle_sigint); // Checks for CTRL+C from the terminal and turns flag variable to 1 when it is pressed
 
@@ -40,7 +40,12 @@ int main (int argc, char *argv[]){
     results[0] = 0.2;
 
     while(!flag){ // Infinite loop until CTRL+C is pressed in the terminal
-        double *results = realloc(results, (i + 2) * sizeof(*results)); // Allocating more memory to the array, per iteration
+        double *temp = realloc(results, (i + 2) * sizeof(*results)); // Allocating more memory to the array, per iteration
+        if(temp == NULL) {
+            printf("Memory Allocation Failed! Fuck You!");
+            exit(1);
+        }
+        results = temp;
         results[i + 1] = PID(results[i]); // Writing the value to the nth element
         i++;
     }
@@ -52,7 +57,7 @@ int main (int argc, char *argv[]){
 
 void writefinalresults(const int rows, double *results){
 
-    unsigned int i;
+    unsigned long int i;
 
     FILE *csv;
     csv = fopen("PID.csv", "w+");
@@ -62,6 +67,8 @@ void writefinalresults(const int rows, double *results){
     }
 
     fclose(csv);
+
+    free(results); // Redundant, but good practice... Not like it'll help...
 
     printf("DONE!!!\n");
 }
