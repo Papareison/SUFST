@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
+#include <time.h>
 
 //      RUN THIS FROM THE TERMINAL, IDEs WILL LAG LIKE HELL                                                        
 //      USE FOR TESTING IDEAL COEFFICIENT VALUES AND TO GRAPH THE RESULTS FROM THE RESULTING CSV USING EXCEL       
@@ -36,8 +37,12 @@ int main (int argc, char *argv[]){
 
     signal(SIGINT, handle_sigint); // Checks for CTRL+C from the terminal and turns flag variable to 1 when it is pressed
 
+    time_t tin, tf, totaltime;
+
     double *results = malloc(sizeof(double)); // Holds each iteration of the PID output
     results[0] = 0.2;
+
+    tin = time(NULL);
 
     while(!flag){ // Infinite loop until CTRL+C is pressed in the terminal
         double *temp = realloc(results, (i + 2) * sizeof(*results)); // Allocating more memory to the array, per iteration
@@ -50,7 +55,14 @@ int main (int argc, char *argv[]){
         i++;
     }
 
+    tf = time(NULL);
+
+    totaltime = tf - tin;
+
     writefinalresults(i, results); // Final write to csv file
+
+
+    printf("Total duration: %ld\n", totaltime);
 
     return 0;
 }
