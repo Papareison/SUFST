@@ -63,7 +63,7 @@ void writefinalresults(const int rows, double *results){
     csv = fopen("PID.csv", "w+");
 
     for(i = 0;  rows > i; i++) {
-        fprintf(csv,"%d, %lf \n", i, results[i]);
+        fprintf(csv,"%ld, %lf \n", i, results[i]);
     }
 
     fclose(csv);
