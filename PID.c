@@ -8,10 +8,9 @@ int main(){
     double previous_error = 0;
     double idealratio = 0.1;
     double ratio = 0.2;
-
-    double PC = 0.75;  // Proportional coefficient    // These need to be ORDERS of magnitude smaller than the ideal ratio and definitely not larger
-    double IC = 1;  // Integral coefficient
-    double DC = 0.0001; // Derivative coefficient
+    double PC = 0.77;  // Proportional coefficient    // These need to be ORDERS of magnitude smaller than the ideal ratio and definitely not larger
+    double IC = 10;  // Integral coefficientss
+    double DC = 0.000105; // Derivative coefficient
     double dt = 0.001; // Time step
 
     double P, I, D;
@@ -42,9 +41,8 @@ int main(){
         printf("PID = %lf\n", PIDoutput);
     }
 
-return 0;
+    return 0;
 
 }
-
 
 

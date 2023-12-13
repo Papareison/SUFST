@@ -1,50 +1,51 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <windows.h>
 #include <unistd.h>
-#include <time.h>
 
 //      RUN THIS FROM THE TERMINAL, IDEs WILL LAG LIKE HELL                                                        
 //      USE FOR TESTING IDEAL COEFFICIENT VALUES AND TO GRAPH THE RESULTS FROM THE RESULTING CSV USING EXCEL       
 //      CHANGE THE COEFFICIENTS AT THE "double PID()" FUNCTION BELOW
 //      RUNNING THE PROGRAM AGAIN WILL OVERWRITE THE PREVIOUS CSV FILE                                              
 
-
-volatile sig_atomic_t flag = 0; // Set flag to 0 so loop works
+static volatile sig_atomic_t flag = 1; // Set flag to 1 so loop works
 
 double idealratio = 0.1;
 
 double dt = 0.001; // Time step
 
-double PC = 0.75;    // Proportional coefficient    // These need to be ORDERS of magnitude smaller than the ideal ratio and definitely not larger
-double IC = 1;     // Integral coefficient
-double DC = 0.0001; // Derivative coefficient, VERY sensitive
+double PC = 0.77;    // Proportional coefficient    // These need to be ORDERS of magnitude smaller than the ideal ratio and definitely not larger
+double IC = 10;     // Integral coefficient
+double DC = 0.000105; // Derivative coefficient, VERY sensitive
 
 double integral_sum = 0;
 
 double previous_error = 0;
 
-void writefinalresults(const int rows, double *results);
+void writefinalresults(const unsigned long int rows, double *results);
 
 double PID(double ratio);
 
-void handle_sigint(int sig);
-
+static void signal_handler(int _);
 
 int main (int argc, char *argv[]){
 
-    unsigned long int i = 0; // 32 bits is a safety measure to make sure overflow doesn't occur, the PID() goes through a tremendous amount of iterations
+    unsigned long int i = 0;
 
-    signal(SIGINT, handle_sigint); // Checks for CTRL+C from the terminal and turns flag variable to 1 when it is pressed
-
-    time_t tin, tf, totaltime;
+    signal(SIGINT, signal_handler); // Checks for CTRL+C from the terminal and turns flag variable to 1 when it is pressed
 
     double *results = malloc(sizeof(double)); // Holds each iteration of the PID output
     results[0] = 0.2;
 
-    tin = time(NULL);
+    LARGE_INTEGER frequency, start, end;
 
-    while(!flag){ // Infinite loop until CTRL+C is pressed in the terminal
+    double seconds;
+
+    QueryPerformanceFrequency(&frequency);
+    QueryPerformanceCounter(&start);
+
+    while(flag){ // Infinite loop until CTRL+C is pressed in the terminal
         double *temp = realloc(results, (i + 2) * sizeof(*results)); // Allocating more memory to the array, per iteration
         if(temp == NULL) {
             printf("Memory Allocation Failed! Fuck You!");
@@ -55,19 +56,17 @@ int main (int argc, char *argv[]){
         i++;
     }
 
-    tf = time(NULL);
-
-    totaltime = tf - tin;
+    QueryPerformanceCounter(&end);
+    seconds = (double)(end.QuadPart - start.QuadPart) / (double)frequency.QuadPart; // Time measurement which divides by frequency using windows.h
 
     writefinalresults(i, results); // Final write to csv file
 
-
-    printf("Total duration: %ld\n", totaltime);
+    printf("Total duration: %lfs\n", seconds);
 
     return 0;
 }
 
-void writefinalresults(const int rows, double *results){
+void writefinalresults(const unsigned long int rows, double *results){
 
     unsigned long int i;
 
@@ -85,8 +84,10 @@ void writefinalresults(const int rows, double *results){
     printf("DONE!!!\n");
 }
 
-void handle_sigint(int sig){ // Turns flag to 1 depending on the int provided
-    flag = 1;
+static void signal_handler(int _)
+{
+    (void)_;
+    flag = 0;
 }
 
 double PID(double ratio){
