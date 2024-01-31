@@ -50,7 +50,7 @@ int main (int argc, char *argv[]){
     while(flag){ // Infinite loop until CTRL+C is pressed in the terminal
         double *temp = realloc(results, (i + 2) * sizeof(*results)); // Allocating more memory to the array, per iteration
         if(temp == NULL) {
-            printf("Memory Allocation Failed! Fuck You!");
+            printf("Memory Allocation Failed!");
             exit(1);
         }
         results = temp;
@@ -84,7 +84,7 @@ void writefinalresults(const unsigned long int rows, double *results){
 
     fclose(csv);
 
-    free(results); // Redundant, but good practice... Not like it'll help...
+    free(results);
 
     printf("DONE!!!\n");
 }
@@ -94,7 +94,7 @@ static void signal_handler(int _){
     flag = 0;
 }
 
-// Runs 1 iteration of the PID on the input. If a continuous process is implemented such as calling in a loop, variables not initialized here must be global.
+// Runs 1 iteration of the PID on the input.
 double PID(double ratio){
 
     double PIDoutput;
