@@ -4,6 +4,8 @@
 #include <windows.h>
 #include <unistd.h>
 
+#define EPSILON 0.0001
+
 //      RUN THIS FROM THE TERMINAL, IDEs WILL LAG LIKE HELL                                                        
 //      USE FOR TESTING IDEAL COEFFICIENT VALUES AND TO GRAPH THE RESULTS FROM THE RESULTING CSV USING EXCEL       
 //      CHANGE THE COEFFICIENTS AT THE "double PID()" FUNCTION BELOW
@@ -53,6 +55,9 @@ int main (int argc, char *argv[]){
         }
         results = temp;
         results[i + 1] = PID(results[i]); // Writing the value to the nth element
+        if ((idealratio - EPSILON < results[i + 1]) && (idealratio + EPSILON > results[i + 1])){
+            break;
+        }
         i++;
     }
 
@@ -74,7 +79,7 @@ void writefinalresults(const unsigned long int rows, double *results){
     csv = fopen("PID.csv", "w+");
 
     for(i = 0;  rows > i; i++) {
-        fprintf(csv,"%ld, %lf \n", i, results[i]);
+        fprintf(csv,"%ld, %lf \n", i, results[i]); 
     }
 
     fclose(csv);
@@ -84,12 +89,12 @@ void writefinalresults(const unsigned long int rows, double *results){
     printf("DONE!!!\n");
 }
 
-static void signal_handler(int _)
-{
+static void signal_handler(int _){
     (void)_;
     flag = 0;
 }
 
+// Runs 1 iteration of the PID on the input. If a continuous process is implemented such as calling in a loop, variables not initialized here must be global.
 double PID(double ratio){
 
     double PIDoutput;
@@ -115,5 +120,4 @@ double PID(double ratio){
     printf("PID = %lf\n", PIDoutput);
 
     return PIDoutput;
-
 }
